@@ -4,68 +4,77 @@ import streamlit as st
 import plotly.express as px
 
 # Load and clean dataset
-df = pd.read_csv("nutrition.csv")
+df_raw = pd.read_csv("nutrition.csv")
+df = df_raw.copy()
 
-# Convert numeric fields from strings (e.g. '12.3 g') to floats
-def extract_number(x):
+# Define columns to clean
+columns_to_convert = [
+    'calories', 'protein', 'carbohydrate', 'sugars', 'total_fat', 'sodium',
+    'fiber', 'fat', 'water'
+]
+
+# Convert fields like "12.4 g" or "6 mg" to numeric
+def extract_numeric(val):
     try:
-        return float(str(x).split()[0])
+        return float(str(val).split()[0].replace(',', ''))
     except:
         return None
 
-columns_to_clean = [
-    'calories', 'protein', 'carbohydrate', 'sugars', 'total_fat', 'sodium',
-    'saturated_fat', 'fiber'
-]
-
-for col in columns_to_clean:
+for col in columns_to_convert:
     if col in df.columns:
-        df[col] = df[col].apply(extract_number)
+        df[col] = df[col].apply(extract_numeric)
+
+# Drop rows missing core nutritional fields
+df.dropna(subset=['calories', 'protein', 'carbohydrate', 'sugars'], inplace=True)
 
 # Sidebar filters
-st.sidebar.header("Filter Options")
-
-cal_min, cal_max = int(df['calories'].min()), int(df['calories'].max())
-calories_range = st.sidebar.slider("Calories Range", cal_min, cal_max, (cal_min, cal_max))
-
+st.sidebar.header("📊 Filter Options")
+cal_range = st.sidebar.slider("Calories Range", 0, int(df['calories'].max()), (0, 500))
 selected_nutrients = st.sidebar.multiselect(
-    "Select nutrients to compare",
-    options=['protein', 'carbohydrate', 'sugars', 'total_fat', 'sodium', 'fiber'],
+    "Compare Nutrients",
+    ['protein', 'carbohydrate', 'sugars', 'fat', 'fiber', 'water', 'sodium'],
     default=['protein', 'sugars']
 )
 
-# Filter data
-filtered_df = df[(df['calories'] >= calories_range[0]) & (df['calories'] <= calories_range[1])]
+# Apply calorie range filter
+filtered_df = df[(df['calories'] >= cal_range[0]) & (df['calories'] <= cal_range[1])]
 
-# Main dashboard
-st.title("Interactive Nutrition Dashboard")
-
+# Title
+st.title("🥗 Interactive Nutrition Dashboard")
 st.markdown("""
-Explore and compare nutritional values of over 8,000 foods. Use the filters to analyze items by calorie content, or compare across selected nutrients.
+Explore nutritional profiles of nearly 9,000 food items. Use filters to focus on specific calorie ranges and compare nutrients interactively.
 """)
 
-# Bar chart of selected nutrients
+# Section 1: Nutrient Averages
+st.subheader("🔍 Average Nutrient Content")
 if selected_nutrients:
-    st.subheader("Nutrient Comparison")
-    mean_values = filtered_df[selected_nutrients].mean().sort_values(ascending=False)
-    fig = px.bar(
-        x=mean_values.index,
-        y=mean_values.values,
-        labels={'x': 'Nutrient', 'y': 'Average Content (per 100g)'}
+    avg_vals = filtered_df[selected_nutrients].mean().sort_values(ascending=False)
+    fig_avg = px.bar(
+        x=avg_vals.index,
+        y=avg_vals.values,
+        labels={'x': 'Nutrient', 'y': 'Average per 100g'}
     )
-    st.plotly_chart(fig)
+    st.plotly_chart(fig_avg)
 
-# Top 10 foods by protein
-st.subheader("Top 10 High-Protein Foods")
+# Section 2: Top 10 Protein-rich Foods
+st.subheader("🏆 Top 10 High-Protein Foods")
 top_protein = filtered_df[['name', 'protein']].dropna().sort_values(by='protein', ascending=False).head(10)
-fig2 = px.bar(top_protein, x='name', y='protein', labels={'protein': 'Protein (g)'})
-st.plotly_chart(fig2)
+fig_top = px.bar(top_protein, x='name', y='protein', labels={'protein': 'Protein (g)'})
+st.plotly_chart(fig_top)
 
-# Nutrient scatter plot
-st.subheader("Scatter Plot: Calories vs Selected Nutrient")
-scatter_nutrient = st.selectbox("Select nutrient for y-axis", options=selected_nutrients)
-fig3 = px.scatter(filtered_df, x='calories', y=scatter_nutrient, hover_name='name', labels={'calories': 'Calories'})
-st.plotly_chart(fig3)
+# Section 3: Scatter Plot
+st.subheader("📈 Scatter: Calories vs Nutrient")
+if selected_nutrients:
+    scatter_choice = st.selectbox("Select nutrient for y-axis", selected_nutrients)
+    fig_scatter = px.scatter(
+        filtered_df,
+        x='calories',
+        y=scatter_choice,
+        hover_name='name',
+        labels={'calories': 'Calories', scatter_choice: scatter_choice.title()}
+    )
+    st.plotly_chart(fig_scatter)
 
+# Footer
 st.markdown("---")
 st.markdown("Data Source: [Kaggle - Nutritional Values for Common Foods](https://www.kaggle.com/datasets/trolukovich/nutritional-values-for-common-foods-and-products)")
