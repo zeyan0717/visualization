@@ -4,7 +4,7 @@ import streamlit as st
 import plotly.express as px
 
 # Load and clean dataset
-df = pd.read_csv("/Users/yanze/Desktop/nutrition.csv")
+df = pd.read_csv("nutrition.csv")
 
 # Convert numeric fields from strings (e.g. '12.3 g') to floats
 def extract_number(x):
