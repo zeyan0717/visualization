@@ -7,7 +7,7 @@ from sklearn.preprocessing import MinMaxScaler
 # Data loading and cleaning function
 @st.cache_data
 def load_and_clean_data():
-    df_raw = pd.read_csv("/Users/yanze/Desktop/nutrition.csv")
+    df_raw = pd.read_csv("nutrition.csv")
     df = df_raw.copy()
 
     # Columns to convert to numeric
