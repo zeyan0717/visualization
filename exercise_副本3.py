@@ -55,18 +55,36 @@ if theme_choice == "Dark":
     st.markdown(
         """
         <style>
-          [data-testid="stAppViewContainer"] > .main {
-              background-color: #0E1117 !important;
+          :root {
+            --bg-color: #0E1117;
+            --sidebar-bg: #262730;
+            --text-color: #FAFAFA;
+            --button-bg: #333333;
+            --button-text: #FFFFFF;
           }
+          /* App 主背景和文字 */
+          [data-testid="stAppViewContainer"] > div {
+            background-color: var(--bg-color) !important;
+            color: var(--text-color) !important;
+          }
+          /* 侧边栏背景和文字 */
           [data-testid="stSidebar"] > div:first-child {
-              background-color: #262730 !important;
+            background-color: var(--sidebar-bg) !important;
+            color: var(--text-color) !important;
           }
+          /* 标题区域背景 */
           [data-testid="stHeader"] {
-              background-color: #0E1117 !important;
+            background-color: var(--bg-color) !important;
           }
-          /* 全局文字颜色调整 */
-          .css-18e3th9, .css-1v3fvcr, .css-1y4p8pa {
-              color: #FAFAFA !important;
+          /* 按钮风格 */
+          .stButton>button {
+            background-color: var(--button-bg) !important;
+            color: var(--button-text) !important;
+            border: none !important;
+          }
+          /* 滑块、下拉等控件字体 */
+          label, div, span, h1, h2, h3, h4, h5, h6, p {
+            color: var(--text-color) !important;
           }
         </style>
         """,
