@@ -37,7 +37,7 @@ def load_and_clean_data(path: str):
     return df
 
 # Load data
-DATA_PATH = "/Users/yanze/Desktop/nutrition.csv"
+DATA_PATH = "nutrition.csv"
 df = load_and_clean_data(DATA_PATH)
 
 # --- Sidebar & theme ---
