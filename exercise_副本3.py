@@ -50,6 +50,29 @@ page = st.sidebar.radio("Select Page", [
 theme_choice = st.sidebar.selectbox("Theme", ["Light","Dark"], index=0)
 template = "plotly_white" if theme_choice == "Light" else "plotly_dark"
 
+
+if theme_choice == "Dark":
+    st.markdown(
+        """
+        <style>
+          [data-testid="stAppViewContainer"] > .main {
+              background-color: #0E1117 !important;
+          }
+          [data-testid="stSidebar"] > div:first-child {
+              background-color: #262730 !important;
+          }
+          [data-testid="stHeader"] {
+              background-color: #0E1117 !important;
+          }
+          /* 全局文字颜色调整 */
+          .css-18e3th9, .css-1v3fvcr, .css-1y4p8pa {
+              color: #FAFAFA !important;
+          }
+        </style>
+        """,
+        unsafe_allow_html=True
+    )
+
 # Filters for most pages
 st.sidebar.header("Filter Options")
 cal_range = st.sidebar.slider("Calorie Range", 0, int(df['calories'].max()), (0,500))
