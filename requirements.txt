@@ -1,5 +1,7 @@
-streamlit
 pandas
+streamlit
 plotly
 scikit-learn
-numpy
+networkx
+scipy
+fpdf
