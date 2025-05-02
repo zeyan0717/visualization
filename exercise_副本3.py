@@ -22,8 +22,10 @@ def load_and_clean_data(path: str):
     # Numeric conversion
     cols = ['calories','protein','carbohydrate','sugars','sodium','fiber','fat','water']
     def to_num(x):
-        try: return float(str(x).split()[0].replace(',',''))
-        except: return None
+        try:
+            return float(str(x).split()[0].replace(',',''))
+        except:
+            return None
     for c in cols:
         if c in df.columns:
             df[c] = df[c].map(to_num)
@@ -39,28 +41,22 @@ def load_and_clean_data(path: str):
 # Load data
 df = load_and_clean_data("nutrition.csv")
 
-# --- Sidebar & theme ---
+# --- Sidebar & Navigation ---
 st.sidebar.title("Navigation & Settings")
 page = st.sidebar.radio("Select Page", [
     "Nutrition Analysis", "Nutrition Radar", "Heatmap", "Health Ranking",
     "Food Clustering", "Meal Planner", "Nutrition Network", "Report & Export"
 ])
-# Theme selection
-theme_choice = st.sidebar.selectbox("Theme", ["Light","Dark"], index=0)
-# Only affects plotly charts
-template = "plotly_white" if theme_choice == "Light" else "plotly_dark"
-
-# Note: Removed dynamic CSS injection for Streamlit global theme
 
 # Filters for most pages
 st.sidebar.header("Filter Options")
-cal_range = st.sidebar.slider("Calorie Range", 0, int(df['calories'].max()), (0,500))
-protein_range = st.sidebar.slider("Protein Range", 0.0, float(df['protein'].max()), (0.0,50.0))
-sugar_range = st.sidebar.slider("Sugar Range", 0.0, float(df['sugars'].max()), (0.0,10.0))
+cal_range = st.sidebar.slider("Calorie Range", 0, int(df['calories'].max()), (0, 500))
+protein_range = st.sidebar.slider("Protein Range", 0.0, float(df['protein'].max()), (0.0, 50.0))
+sugar_range = st.sidebar.slider("Sugar Range", 0.0, float(df['sugars'].max()), (0.0, 10.0))
 filtered_df = df[
-    (df['calories']>=cal_range[0]) & (df['calories']<=cal_range[1]) &
-    (df['protein']>=protein_range[0]) & (df['protein']<=protein_range[1]) &
-    (df['sugars']>=sugar_range[0]) & (df['sugars']<=sugar_range[1])
+    (df['calories'] >= cal_range[0]) & (df['calories'] <= cal_range[1]) &
+    (df['protein'] >= protein_range[0]) & (df['protein'] <= protein_range[1]) &
+    (df['sugars'] >= sugar_range[0]) & (df['sugars'] <= sugar_range[1])
 ]
 default_nutrients = ['protein','carbohydrate','sugars','fat','fiber','water']
 selected_nutrients = st.sidebar.multiselect("Select Nutrients", default_nutrients, default=default_nutrients)
@@ -73,22 +69,20 @@ if page == "Nutrition Analysis":
         st.subheader("Average Nutrients")
         if selected_nutrients:
             avg = filtered_df[selected_nutrients].mean().sort_values(ascending=False)
-            avg_df = pd.DataFrame({"Nutrient":avg.index, "Average":avg.values})
-            fig = px.bar(avg_df, x="Nutrient", y="Average",
-                         hover_data={"Average":":.2f"}, template=template)
+            avg_df = pd.DataFrame({"Nutrient": avg.index, "Average": avg.values})
+            fig = px.bar(avg_df, x="Nutrient", y="Average", hover_data={"Average":":.2f"})
             st.plotly_chart(fig)
     with tab2:
         st.subheader("Calories vs Nutrient")
         nut = st.selectbox("Pick a nutrient", selected_nutrients)
-        fig = px.scatter(filtered_df, x="calories", y=nut,
-                         hover_data=["name","health_score"], template=template)
+        fig = px.scatter(filtered_df, x="calories", y=nut, hover_data=["name","health_score"])
         st.plotly_chart(fig)
     with tab3:
         st.subheader("Nutrient Distribution")
         if selected_nutrients:
             melted = filtered_df.melt(id_vars=['name'], value_vars=selected_nutrients,
                                        var_name='Nutrient', value_name='Value')
-            fig = px.box(melted, x='Nutrient', y='Value', template=template)
+            fig = px.box(melted, x='Nutrient', y='Value')
             st.plotly_chart(fig)
 
 # --- Page: Nutrition Radar ---
@@ -96,10 +90,9 @@ elif page == "Nutrition Radar":
     st.title("🧭 Nutrition Radar")
     food = st.selectbox("Pick Food", filtered_df['name'].unique())
     if food and selected_nutrients:
-        row = filtered_df[filtered_df['name']==food][selected_nutrients].iloc[0]
+        row = filtered_df[filtered_df['name'] == food][selected_nutrients].iloc[0]
         fig = go.Figure(go.Scatterpolar(r=row.values, theta=selected_nutrients,
                                         fill='toself', name=food))
-        fig.update_layout(polar=dict(radialaxis=dict(visible=True)), template=template)
         st.plotly_chart(fig)
     else:
         st.warning("Select a food and nutrients.")
@@ -109,7 +102,7 @@ elif page == "Heatmap":
     st.title("🌡️ Nutrient Correlation Heatmap")
     if len(selected_nutrients) >= 2:
         corr = filtered_df[selected_nutrients].corr()
-        fig = px.imshow(corr, text_auto=True, aspect='auto', color_continuous_scale='RdBu_r', template=template)
+        fig = px.imshow(corr, text_auto=True, aspect='auto', color_continuous_scale='RdBu_r')
         st.plotly_chart(fig)
     else:
         st.warning("Pick at least two nutrients.")
@@ -117,8 +110,8 @@ elif page == "Heatmap":
 # --- Page: Health Ranking ---
 elif page == "Health Ranking":
     st.title("🏆 Health Score Ranking")
-    top = filtered_df[['name','health_score']].nlargest(10,'health_score')
-    fig = px.bar(top, x='name', y='health_score', hover_data={"health_score":":.2f"}, template=template)
+    top = filtered_df[['name','health_score']].nlargest(10, 'health_score')
+    fig = px.bar(top, x='name', y='health_score', hover_data={"health_score":":.2f"})
     st.plotly_chart(fig)
     st.dataframe(top)
 
@@ -132,11 +125,11 @@ elif page == "Food Clustering":
         data = filtered_df[selected_nutrients].dropna()
         scaler = MinMaxScaler(); scaled = scaler.fit_transform(data)
         frames = []
-        ks = list(range(2, k_max+1)) if animate else [st.slider("Number of Clusters",2,10,4)]
+        ks = list(range(2, k_max+1)) if animate else [st.slider("Number of Clusters", 2, 10, 4)]
         for k in ks:
-            model = KMeans(n_clusters=k, random_state=0) if alg=='KMeans' else AgglomerativeClustering(n_clusters=k)
+            model = KMeans(n_clusters=k, random_state=0) if alg == 'KMeans' else AgglomerativeClustering(n_clusters=k)
             labels = model.fit_predict(scaled)
-            dr = PCA(n_components=2) if st.radio("DR Method",["PCA","t-SNE"])=='PCA' else TSNE(n_components=2, random_state=0)
+            dr = PCA(n_components=2) if st.radio("DR Method", ["PCA","t-SNE"]) == 'PCA' else TSNE(n_components=2, random_state=0)
             coords = dr.fit_transform(scaled)
             dfp = pd.DataFrame(coords, columns=['Dim1','Dim2'])
             dfp['Cluster'] = labels.astype(str)
@@ -145,14 +138,11 @@ elif page == "Food Clustering":
             frames.append(dfp)
         plot_df = pd.concat(frames)
         if animate:
-            fig = px.scatter(plot_df, x='Dim1', y='Dim2', animation_frame='Cluster_Count', color='Cluster',
-                             hover_data=['Name'], template=template)
+            fig = px.scatter(plot_df, x='Dim1', y='Dim2', animation_frame='Cluster_Count', color='Cluster', hover_data=['Name'])
         else:
-            fig = px.scatter(plot_df, x='Dim1', y='Dim2', color='Cluster', hover_data=['Name'], template=template)
+            fig = px.scatter(plot_df, x='Dim1', y='Dim2', color='Cluster', hover_data=['Name'])
         fig.update_layout(showlegend=True)
         st.plotly_chart(fig)
-        # Show silhouette for last k
-        last_labels = frames[-1]['Cluster']
         score = silhouette_score(scaled, frames[-1]['Cluster'].astype(int))
         st.write(f"Silhouette Score (k={frames[-1]['Cluster_Count']}): {score:.2f}")
     else:
@@ -163,7 +153,7 @@ elif page == "Meal Planner":
     st.title("📋 Smart Meal Planner")
     foods = st.multiselect("Pick foods", filtered_df['name'].unique(), default=filtered_df['name'].sample(3).tolist())
     portions = {food: st.number_input(f"{food} (100g units)", 0.0, 10.0, 1.0) for food in foods}
-    totals = {nut: sum(filtered_df.loc[filtered_df['name']==f, nut].iloc[0]*p for f,p in portions.items())
+    totals = {nut: sum(filtered_df.loc[filtered_df['name'] == f, nut].iloc[0] * p for f, p in portions.items())
               for nut in ['protein','carbohydrate','fat']}
     st.subheader("Totals (per meal)")
     st.write(totals)
@@ -171,15 +161,13 @@ elif page == "Meal Planner":
     tp = st.number_input("Protein target (g)", 0.0, 200.0, 50.0)
     tc = st.number_input("Carbs target (g)", 0.0, 400.0, 200.0)
     tf = st.number_input("Fat target (g)", 0.0, 100.0, 30.0)
-    # Gauges
-    for nut,val,target in zip(['Protein','Carbs','Fat'], totals.values(), [tp,tc,tf]):
+    for nut, val, target in zip(['Protein','Carbs','Fat'], totals.values(), [tp, tc, tf]):
         fig = go.Figure(go.Indicator(mode='gauge+number', value=val,
                                       gauge={'axis':{'range':[0,target]}}, title={'text':nut}))
-        fig.update_layout(template=template)
         st.plotly_chart(fig)
     if st.button("Optimize Meal for Targets") and foods:
         idx = filtered_df[filtered_df['name'].isin(foods)].index
-        A = [[-filtered_df.loc[i,n] for i in idx] for n in ['protein','carbohydrate','fat']]
+        A = [[-filtered_df.loc[i, n] for i in idx] for n in ['protein','carbohydrate','fat']]
         b = [-tp, -tc, -tf]
         res = linprog(c=[1]*len(idx), A_ub=A, b_ub=b, bounds=[(0,None)]*len(idx))
         if res.success:
@@ -192,20 +180,20 @@ elif page == "Meal Planner":
 # --- Page: Nutrition Network ---
 elif page == "Nutrition Network":
     st.title("🔗 Dynamic Nutrition Network")
-    if len(selected_nutrients)>=2:
+    if len(selected_nutrients) >= 2:
         corr = filtered_df[selected_nutrients].corr().abs()
         thresh = st.slider("Min correlation", 0.0, 1.0, 0.5)
         G = nx.Graph()
-        for n in selected_nutrients: G.add_node(n)
-        for i,a in enumerate(selected_nutrients):
-            for j,b in enumerate(selected_nutrients[i+1:], start=i+1):
-                if corr.iloc[i,j] >= thresh:
-                    G.add_edge(a,b, weight=corr.iloc[i,j])
+        for n in selected_nutrients:
+            G.add_node(n)
+        for i, a in enumerate(selected_nutrients):
+            for j, b in enumerate(selected_nutrients[i+1:], start=i+1):
+                if corr.iloc[i, j] >= thresh:
+                    G.add_edge(a, b, weight=corr.iloc[i, j])
         pos = nx.spring_layout(G)
-        edge_x = []
-        edge_y = []
-        for u,v in G.edges():
-            x0,y0 = pos[u]; x1,y1 = pos[v]
+        edge_x, edge_y = [], []
+        for u, v in G.edges():
+            x0, y0 = pos[u]; x1, y1 = pos[v]
             edge_x += [x0, x1, None]
             edge_y += [y0, y1, None]
         node_x = [pos[n][0] for n in G.nodes()]
@@ -214,7 +202,6 @@ elif page == "Nutrition Network":
         fig.add_trace(go.Scatter(x=edge_x, y=edge_y, mode='lines', hoverinfo='none'))
         fig.add_trace(go.Scatter(x=node_x, y=node_y, mode='markers+text', text=list(G.nodes()),
                                  textposition='top center', marker={'size':20}))
-        fig.update_layout(template=template)
         st.plotly_chart(fig)
     else:
         st.warning("Select at least two nutrients.")
@@ -228,8 +215,7 @@ elif page == "Report & Export":
         pdf.add_page()
         pdf.set_font("Arial","B",16)
         pdf.cell(0,10,"Nutrition Analysis Report",ln=True, align="C")
-        # Example: add heatmap snapshot
-        fig = px.imshow(filtered_df[selected_nutrients].corr(), text_auto=True, template=template)
+        fig = px.imshow(filtered_df[selected_nutrients].corr(), text_auto=True)
         tmp = tempfile.NamedTemporaryFile(suffix='.png', delete=False)
         fig.write_image(tmp.name)
         pdf.image(tmp.name, w=180)
@@ -246,3 +232,4 @@ elif page == "Report & Export":
 # --- Footer ---
 st.markdown("---")
 st.markdown("Data source: Kaggle - Nutritional values for common foods and products")
+
