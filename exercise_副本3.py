@@ -37,8 +37,7 @@ def load_and_clean_data(path: str):
     return df
 
 # Load data
-DATA_PATH = "nutrition.csv"
-df = load_and_clean_data(DATA_PATH)
+df = load_and_clean_data("nutrition.csv")
 
 # --- Sidebar & theme ---
 st.sidebar.title("Navigation & Settings")
@@ -48,48 +47,10 @@ page = st.sidebar.radio("Select Page", [
 ])
 # Theme selection
 theme_choice = st.sidebar.selectbox("Theme", ["Light","Dark"], index=0)
+# Only affects plotly charts
 template = "plotly_white" if theme_choice == "Light" else "plotly_dark"
 
-
-if theme_choice == "Dark":
-    st.markdown(
-        """
-        <style>
-          :root {
-            --bg-color: #0E1117;
-            --sidebar-bg: #262730;
-            --text-color: #FAFAFA;
-            --button-bg: #333333;
-            --button-text: #FFFFFF;
-          }
-          /* App 主背景和文字 */
-          [data-testid="stAppViewContainer"] > div {
-            background-color: var(--bg-color) !important;
-            color: var(--text-color) !important;
-          }
-          /* 侧边栏背景和文字 */
-          [data-testid="stSidebar"] > div:first-child {
-            background-color: var(--sidebar-bg) !important;
-            color: var(--text-color) !important;
-          }
-          /* 标题区域背景 */
-          [data-testid="stHeader"] {
-            background-color: var(--bg-color) !important;
-          }
-          /* 按钮风格 */
-          .stButton>button {
-            background-color: var(--button-bg) !important;
-            color: var(--button-text) !important;
-            border: none !important;
-          }
-          /* 滑块、下拉等控件字体 */
-          label, div, span, h1, h2, h3, h4, h5, h6, p {
-            color: var(--text-color) !important;
-          }
-        </style>
-        """,
-        unsafe_allow_html=True
-    )
+# Note: Removed dynamic CSS injection for Streamlit global theme
 
 # Filters for most pages
 st.sidebar.header("Filter Options")
