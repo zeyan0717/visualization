@@ -22,7 +22,7 @@ def load_and_clean_data(path: str):
     return df_raw
 
 # Load data
-data = load_and_clean_data('nutrition_data.csv')
+data = load_and_clean_data('nutrition.csv')
 
 # --- Sidebar: Nutrient Selection ---
 default_nutrients = ['protein', 'carbohydrate', 'sugars', 'fat', 'fiber', 'water']
